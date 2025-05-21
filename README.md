@@ -12,7 +12,7 @@ A simple and elegant time tracking extension with the following features:
 
 ## 🚀 Installation
 
-1. Clone or download this repository  
+1. git clone https://github.com/shakibnabi/time-tracker-chrome-extension.git or download this repository  
 2. Open Chrome and go to `chrome://extensions/`  
 3. Enable "Developer mode" (toggle in top right)  
 4. Click **"Load unpacked"** and select the extension directory  
@@ -38,9 +38,8 @@ A simple and elegant time tracking extension with the following features:
   </ul>
   <p><strong>📩 Contact me now:</strong></p>
   <p>
-    🌐 Website: <a href="https://shakibnabi.dev" target="_blank">shakibnabi.dev</a><br>
-    💼 Upwork: <a href="https://www.upwork.com/freelancers/~01abcdef1234567890" target="_blank">Hire me on Upwork</a><br>
-    📧 Email: <a href="mailto:shakibnabi.dev@gmail.com">shakibnabi.dev@gmail.com</a>
+    🌐 Website: <a href="https://shakibnabi.github.io/" target="_blank">shakibnabi.dev</a><br>
+    📧 Email: <a href="mailto:skbdevbd@gmail.com">skbdevbd@gmail.com</a>
   </p>
 </div>
 
