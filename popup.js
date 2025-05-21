@@ -13,12 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const buttonIcon = document.getElementById('buttonIcon');
   const recordsBody = document.getElementById('recordsBody');
   
-  let timer = null;
-  let startTime = null;
   let elapsedTime = 0;
-  let isRunning = false;
-  let currentSessionTime = 0;
-  
+  let uiUpdateInterval = null;
+
   // Load saved data
   chrome.storage.local.get(['totalTime', 'records'], function(data) {
     if (data.totalTime) {
@@ -29,95 +26,105 @@ document.addEventListener('DOMContentLoaded', function() {
     if (data.records) {
       renderRecords(data.records);
     }
+
+    // Get current timer state from background
+    chrome.runtime.sendMessage({ action: 'getTime' }, (response) => {
+      if (response.isRunning) {
+        startUIUpdates();
+        buttonText.textContent = 'Stop';
+        buttonIcon.className = 'ri-pause-fill button-icon';
+        startStopBtn.classList.add('is-running');
+      }
+    });
   });
-  
+
   // Start/Stop button click handler
   startStopBtn.addEventListener('click', function() {
-    if (isRunning) {
+    if (startStopBtn.classList.contains('is-running')) {
       stopTimer();
     } else {
       startTimer();
     }
   });
-  
+
   // Reset button click handler
   resetBtn.addEventListener('click', function() {
     resetTimer();
   });
-  
+
   function startTimer() {
-    if (!isRunning) {
-      startTime = new Date().getTime();
-      isRunning = true;
-      buttonText.textContent = 'Stop';
-      buttonIcon.className = 'ri-pause-fill button-icon';
-      startStopBtn.classList.add('is-running');
-      
-      timer = setInterval(updateTimer, 1000);
-    }
+    chrome.runtime.sendMessage({ action: 'start' });
+    startUIUpdates();
+    buttonText.textContent = 'Stop';
+    buttonIcon.className = 'ri-pause-fill button-icon';
+    startStopBtn.classList.add('is-running');
   }
-  
+
   function stopTimer() {
-    if (isRunning) {
-      clearInterval(timer);
-      isRunning = false;
+    chrome.runtime.sendMessage({ action: 'stop' }, (response) => {
+      elapsedTime += response.elapsed;
+      stopUIUpdates();
+      
       buttonText.textContent = 'Start';
       buttonIcon.className = 'ri-play-fill button-icon';
       startStopBtn.classList.remove('is-running');
       
-      const endTime = new Date().getTime();
-      currentSessionTime = Math.floor((endTime - startTime) / 1000);
-      elapsedTime += currentSessionTime;
-      
       saveTime();
       updateTotalTimeDisplay();
-      addRecord(currentSessionTime);
-      currentSessionTime = 0;
-      currentTimeDisplay.textContent = '00:00:00';
-    }
+      addRecord(response.elapsed);
+      currentTimeDisplay.textContent = '0s';
+    });
   }
-  
-  function updateTimer() {
-    const currentTime = new Date().getTime();
-    const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
-    currentSessionTime = elapsedSeconds;
-    currentTimeDisplay.textContent = formatTime(elapsedSeconds, true);
-  }
-  
+
   function resetTimer() {
-    if (isRunning) {
-      stopTimer();
+    chrome.runtime.sendMessage({ action: 'reset' });
+    stopUIUpdates();
+    
+    elapsedTime = 0;
+    chrome.storage.local.set({ totalTime: 0, records: [] }, function() {
+      updateTotalTimeDisplay();
+      renderRecords([]);
+    });
+    currentTimeDisplay.textContent = '0s';
+    
+    buttonText.textContent = 'Start';
+    buttonIcon.className = 'ri-play-fill button-icon';
+    startStopBtn.classList.remove('is-running');
+  }
+
+  function startUIUpdates() {
+    stopUIUpdates();
+    uiUpdateInterval = setInterval(() => {
+      chrome.runtime.sendMessage({ action: 'getTime' }, (response) => {
+        currentTimeDisplay.textContent = formatCompactTime(response.elapsedSeconds);
+      });
+    }, 200);
+  }
+
+  function stopUIUpdates() {
+    if (uiUpdateInterval) {
+      clearInterval(uiUpdateInterval);
+      uiUpdateInterval = null;
     }
-    currentSessionTime = 0;
-    currentTimeDisplay.textContent = '00:00:00';
   }
-  
+
   function updateTotalTimeDisplay() {
-    const totalHours = Math.floor(elapsedTime / 3600);
-    const totalMinutes = Math.floor((elapsedTime % 3600) / 60);
-    const totalSeconds = elapsedTime % 60;
-    totalTimeDisplay.textContent = `Total: ${totalHours}h ${totalMinutes}m ${totalSeconds}s`;
+    totalTimeDisplay.textContent = `Total: ${formatCompactTime(elapsedTime)}`;
   }
-  
-  function formatTime(seconds, showSeconds = true) {
+
+  function formatCompactTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     
-    if (showSeconds) {
-      return [
-        hours.toString().padStart(2, '0'),
-        minutes.toString().padStart(2, '0'),
-        secs.toString().padStart(2, '0')
-      ].join(':');
-    } else {
-      return [
-        hours.toString().padStart(2, '0'),
-        minutes.toString().padStart(2, '0')
-      ].join(':');
-    }
+    const parts = [];
+    if (hours > 0) parts.push(`${hours}h`);
+    if (minutes > 0 || hours > 0) parts.push(`${minutes}m`);
+    if (secs > 0 || (hours === 0 && minutes === 0)) parts.push(`${secs}s`);
+    
+    return parts.join(' ') || '0s';
   }
-  
+
   function formatDate(timestamp) {
     const date = new Date(timestamp);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -129,16 +136,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let hours = date.getHours();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
+    hours = hours ? hours : 12;
     const minutes = date.getMinutes().toString().padStart(2, '0');
     
     return `${day} ${month}, ${year} ${hours}:${minutes} ${ampm}`;
   }
-  
+
   function saveTime() {
     chrome.storage.local.set({ totalTime: elapsedTime });
   }
-  
+
   function addRecord(duration) {
     chrome.storage.local.get(['records'], function(data) {
       const records = data.records || [];
@@ -160,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-  
+
   function renderRecords(records) {
     recordsBody.innerHTML = '';
     
@@ -174,14 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     records.forEach(record => {
-      const hours = Math.floor(record.duration / 3600);
-      const minutes = Math.floor((record.duration % 3600) / 60);
-      const seconds = record.duration % 60;
-      
       const row = document.createElement('tr');
       row.innerHTML = `
         <td class="record-date">${formatDate(record.date)}</td>
-        <td class="record-duration">${hours}h ${minutes}m ${seconds}s</td>
+        <td class="record-duration">${formatCompactTime(record.duration)}</td>
         <td style="text-align: right;">
           <button class="delete-btn" data-timestamp="${record.timestamp}">
             <i class="ri-delete-bin-line"></i>
@@ -199,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
-  
+
   function deleteRecord(timestamp) {
     chrome.storage.local.get(['records', 'totalTime'], function(data) {
       const records = data.records || [];
