@@ -31,14 +31,14 @@ A simple and elegant time tracking extension with the following features:
 <div align="center">
   <h2>🚀 Let’s Build Your Dream Extension!</h2>
   <p><strong>Whether you're a startup, agency, or individual, I can help you build custom browser extensions tailored to your needs.</strong></p>
-  <ul align="left">
+  <ul>
     <li>✅ Chrome, Firefox, and Edge support</li>
     <li>✅ API integration, automation, productivity tools, and more</li>
     <li>✅ Clean, secure, and well-documented code</li>
   </ul>
   <p><strong>📩 Contact me now:</strong></p>
   <p>
-    🌐 Website: <a href="https://shakibnabi.github.io/" target="_blank">shakibnabi.dev</a><br>
+    🌐 Website: <a href="https://shakibnabi.github.io/" target="_blank">shakibnabi.github.io</a><br>
     📧 Email: <a href="mailto:skbdevbd@gmail.com">skbdevbd@gmail.com</a>
   </p>
 </div>
