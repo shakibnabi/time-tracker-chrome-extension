@@ -28,7 +28,7 @@ A simple and elegant time tracking extension with the following features:
 
 ## 🛠️ Need a Custom Chrome Extension?
 
-<div align="center">
+<div>
   <h2>🚀 Let’s Build Your Dream Extension!</h2>
   <p><strong>Whether you're a startup, agency, or individual, I can help you build custom browser extensions tailored to your needs.</strong></p>
   <ul>
