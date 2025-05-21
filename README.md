@@ -47,7 +47,7 @@ A simple and elegant time tracking extension with the following features:
 
 ## 🌐 Other Browsers
 
-- ✅ [Download for Firefox](#) *(coming soon)*  
+- ✅ <a href="https://github.com/shakibnabi/time-tracker-firefox-extension" target="_blank">[Download for Firefox]</a>
 - ✅ [Download for Microsoft Edge](#) *(coming soon)*  
 
 ## ❤️ Contribute & Connect
